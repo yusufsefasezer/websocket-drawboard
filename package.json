@@ -1,6 +1,6 @@
 {
   "name": "websocket-drawboard",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Collaborative drawing application developed with JavaScript, WebSocket and Node.js",
   "main": "server.js",
   "author": "Yusuf Sezer <yusufsezer@mail.com> (https://www.yusufsezer.com/)",
