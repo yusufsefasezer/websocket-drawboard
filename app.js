@@ -1,108 +1,8 @@
 "use strict";
 var ws = null,
   SOCKET_URL = "ws://localhost:3000",
-  CONNECT_STATUS = true;
-
-function init() {
-  var canvas = document.querySelector("#drawboard");
-  canvas.addEventListener("mousedown", startDraw);
-  canvas.addEventListener("mousemove", draw);
-  DrawBoard.init(canvas);
-  window.addEventListener("mouseup", stopDraw);
-
-  // Tool events
-  document.querySelector("#color").addEventListener("change", function (event) {
-    socketSendData("setColor", this.value);
-  });
-  document.querySelector("#size").addEventListener("change", function (event) {
-    socketSendData("setSize", this.value);
-  });
-  document.querySelector("#clear").addEventListener("click", function (event) {
-    socketSendData("clear", null);
-  });
-  document.querySelector("#save").addEventListener("click", function (event) {
-    DrawBoard.download();
-  });
-
-  // WebSocket
-  ws = new WebSocket(SOCKET_URL);
-  ws.addEventListener("open", socketOpen);
-  ws.addEventListener("message", socketMessage);
-  ws.addEventListener("error", socketError);
-  ws.addEventListener("close", socketClose);
-};
-
-// WebSocket events
-function socketOpen(event) {
-  CONNECT_STATUS = true;
-  socketSendData("first", null);
-};
-
-function socketMessage(event) {
-
-  var receivedData = JSON.parse(event.data);
-
-  switch (receivedData.action) {
-    case "draw":
-      DrawBoard.draw(receivedData.data.X, receivedData.data.Y);
-      break;
-    case "stopDraw":
-      DrawBoard.setStatus(false);
-      DrawBoard.context.beginPath();
-      break;
-    case "setColor":
-      DrawBoard.setColor(receivedData.data);
-      break;
-    case "setSize":
-      DrawBoard.setSize(receivedData.data);
-      break;
-    case "clear":
-      DrawBoard.clear();
-      break;
-    case "getData":
-      socketSendData("setData", DrawBoard.getData());
-      break;
-    case "setData":
-      DrawBoard.setData(receivedData.data);
-      break;
-    default:
-      alert("WTF???");
-      break;
-  }
-};
-
-function socketError(event) {
-  CONNECT_STATUS = false;
-};
-
-function socketClose(event) {
-  CONNECT_STATUS = false;
-};
-
-function socketSendData(action, data) {
-  if (!CONNECT_STATUS) return;
-  ws.send(JSON.stringify({
-    action: action,
-    data: data
-  }));
-};
-
-// Canvas events
-function draw(event) {
-  if (!DrawBoard.DRAWING) return;
-  socketSendData("draw", {
-    X: event.offsetX,
-    Y: event.offsetY,
-  });
-};
-
-function startDraw(event) {
-  DrawBoard.setStatus(true);
-};
-
-function stopDraw(event) {
-  socketSendData("stopDraw", null);
-};
+  CONNECT_STATUS = true,
+  canvas = null;
 
 // DrawBoard
 var DrawBoard = {
@@ -163,6 +63,112 @@ var DrawBoard = {
       that.context.drawImage(img, 0, 0);
     }
   }
-};
+}
+
+function onCanvasMouseDown() {
+  DrawBoard.setStatus(true);
+}
+
+// Canvas events
+function onCanvasMouseMove(e) {
+  if (!DrawBoard.DRAWING) return;
+  socketSendData("draw", {
+    X: e.offsetX,
+    Y: e.offsetY,
+  });
+}
+
+function onCanvasMouseUp() {
+  socketSendData("stopDraw", null);
+}
+
+// WebSocket events
+function onSocketOpen() {
+  CONNECT_STATUS = true;
+  socketSendData("first", null);
+}
+
+function onSocketMessage(e) {
+  var data = JSON.parse(e.data);
+  switch (data.action) {
+    case "draw":
+      DrawBoard.draw(data.data.X, data.data.Y);
+      break;
+    case "stopDraw":
+      DrawBoard.setStatus(false);
+      DrawBoard.context.beginPath();
+      break;
+    case "setColor":
+      DrawBoard.setColor(data.data);
+      break;
+    case "setSize":
+      DrawBoard.setSize(data.data);
+      break;
+    case "clear":
+      DrawBoard.clear();
+      break;
+    case "getData":
+      socketSendData("setData", DrawBoard.getData());
+      break;
+    case "setData":
+      DrawBoard.setData(data.data);
+      break;
+    default:
+      alert("Grrr");
+      break;
+  }
+}
+
+function onSocketError() {
+  CONNECT_STATUS = false;
+}
+
+function onSocketClose() {
+  CONNECT_STATUS = false;
+}
+
+function socketSendData(action, data) {
+  if (!CONNECT_STATUS) return;
+  ws.send(JSON.stringify({
+    action: action,
+    data: data
+  }));
+}
+
+function initElem() {
+  canvas = document.querySelector("#drawboard");
+  // WebSocket
+  ws = new WebSocket(SOCKET_URL);
+}
+
+function initEvent() {
+  canvas.addEventListener("mousedown", onCanvasMouseDown);
+  canvas.addEventListener("mousemove", onCanvasMouseMove);
+  window.addEventListener("mouseup", onCanvasMouseUp);
+  ws.addEventListener("open", onSocketOpen);
+  ws.addEventListener("message", onSocketMessage);
+  ws.addEventListener("error", onSocketError);
+  ws.addEventListener("close", onSocketClose);
+
+  // Tool events
+  document.querySelector("#color").addEventListener("change", function () {
+    socketSendData("setColor", this.value);
+  });
+  document.querySelector("#size").addEventListener("change", function () {
+    socketSendData("setSize", this.value);
+  });
+  document.querySelector("#clear").addEventListener("click", function () {
+    socketSendData("clear", null);
+  });
+  document.querySelector("#save").addEventListener("click", function () {
+    DrawBoard.download();
+  });
+}
+
+function init() {
+  initElem();
+  initEvent();
+  DrawBoard.init(canvas);
+}
 
 document.addEventListener("DOMContentLoaded", init);

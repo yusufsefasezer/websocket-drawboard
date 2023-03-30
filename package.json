@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Collaborative drawing application developed with JavaScript, WebSocket and Node.js",
   "main": "server.js",
-  "author": "Yusuf SEZER <yusufsezer@mail.com> (http://www.yusufsezer.com/)",
+  "author": "Yusuf Sezer <yusufsezer@mail.com> (https://www.yusufsezer.com/)",
   "repository": {
     "type": "git",
     "url": "https://github.com/yusufsefasezer/websocket-drawboard.git"
@@ -15,6 +15,6 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "ws": "^6.0.0"
+    "ws": "~8.13.0"
   }
 }
